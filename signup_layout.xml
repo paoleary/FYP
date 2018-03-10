@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
+        <com.rengwuxian.materialedittext.MaterialEditText
             android:id="@+id/edtNewUserName"
             android:hint="User name"
             android:textColorHint="@color/colorPrimary"
@@ -25,7 +25,7 @@
             app:met_singleLineEllipsis="true"
             />
 
-        <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
+        <com.rengwuxian.materialedittext.MaterialEditText
             android:id="@+id/edtNewPassword"
             android:hint="Password"
             android:textColorHint="@color/colorPrimary"
@@ -40,7 +40,7 @@
             app:met_singleLineEllipsis="true"
             />
 
-        <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
+        <com.rengwuxian.materialedittext.MaterialEditText
             android:id="@+id/edtNewEmail"
             android:hint="Email Address"
             android:textColorHint="@color/colorPrimary"
