@@ -1,6 +1,9 @@
 package com.example.pa.project2;
 
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Build;
+import android.os.StrictMode;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,7 +20,18 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
+import java.lang.reflect.Method;
+
 public class MainActivity extends AppCompatActivity {
+
+    /*if(Build.VERSION.SDK_INT >= 24){
+        try{
+            Method m = StrictMode.class.getMethod("disableDeathOnFileUriExposure");
+            m.invoke(null);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }*/
     //for signing up
     MaterialEditText edtNewUser;
     MaterialEditText getEdtNewPassword;
@@ -64,15 +78,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //Sign-in & user verification
     private void signIn(final String username, final String password) {
         users.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                //Check Username field isn't empty
                 if(dataSnapshot.child(username).exists()){
                     if(!username.isEmpty()){
                         User login = dataSnapshot.child(username).getValue(User.class);
+                        //check if password entered is same as password for the username entered
                         if(login.getPassword().equals(password)){
                             Toast.makeText(MainActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
+                            Intent home = new Intent(MainActivity.this, LoggedInHomeActivity.class);
+                            startActivity(home);
+                            finish();
                         }
                         else {
                             Toast.makeText(MainActivity.this, "Login failed, incorrect password", Toast.LENGTH_SHORT).show();
