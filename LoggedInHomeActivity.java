@@ -1,5 +1,7 @@
 package com.example.pa.project2;
 
+import android.accessibilityservice.AccessibilityService;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.BottomNavigationView;
@@ -13,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.example.pa.project2.model.Question;
 import com.example.pa.project2.model.Quiz;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -32,6 +35,7 @@ public class LoggedInHomeActivity extends AppCompatActivity {
     //firebase stuff
     FirebaseDatabase database;
     DatabaseReference quizzes;
+    DatabaseReference questions;
 
     //for creating new quiz
     MaterialEditText edtNewQuizName;
@@ -40,6 +44,7 @@ public class LoggedInHomeActivity extends AppCompatActivity {
     MaterialEditText edtNewAnswerB;
     MaterialEditText edtNewAnswerC;
     MaterialEditText edtNewAnswerD;
+    Boolean quizCreated;
 
 
     //for taking a quiz
@@ -53,6 +58,7 @@ public class LoggedInHomeActivity extends AppCompatActivity {
         //Firebase stuff
         database = FirebaseDatabase.getInstance();
         quizzes = database.getReference("Quizzes");
+        questions = database.getReference(edtQuizName.toString());
 
         btnAddQuiz = (Button)findViewById(R.id.btnAddQuiz);
         btnTakeQuiz = (Button) findViewById(R.id.btnTakeQuiz);
@@ -99,17 +105,17 @@ public class LoggedInHomeActivity extends AppCompatActivity {
         alertdialog.setTitle("Add Quiz");
         alertdialog.setMessage("Please provide the necessary information");
 
-        LayoutInflater inflater = this.getLayoutInflater();
+        final LayoutInflater inflater = this.getLayoutInflater();
         View add_quiz_layout = inflater.inflate(R.layout.add_quiz_layout,null);
         alertdialog.setView(add_quiz_layout);
         alertdialog.setIcon(R.drawable.ic_question_answer_black_24dp);
 
         edtNewQuizName = add_quiz_layout.findViewById(R.id.edtNewQuizName);
-        edtNewQuestion = add_quiz_layout.findViewById(R.id.edtNewQuestion);
+        /*edtNewQuestion = add_quiz_layout.findViewById(R.id.edtNewQuestion);
         edtNewAnswerA = add_quiz_layout.findViewById(R.id.edtNewAnswerA);
         edtNewAnswerB = add_quiz_layout.findViewById(R.id.edtNewAnswerB);
         edtNewAnswerC = add_quiz_layout.findViewById(R.id.edtNewAnswerC);
-        edtNewAnswerD = add_quiz_layout.findViewById(R.id.edtNewAnswerD);
+        edtNewAnswerD = add_quiz_layout.findViewById(R.id.edtNewAnswerD); */
 
         alertdialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
@@ -119,25 +125,79 @@ public class LoggedInHomeActivity extends AppCompatActivity {
         });
         alertdialog.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
+            public void onClick(final DialogInterface dialogInterface, int i) {
                 final Quiz quiz = new Quiz(
-                    edtNewQuizName.getText().toString(),
-                    edtNewQuestion.getText().toString(),
-                    edtNewAnswerA.getText().toString(),
-                    edtNewAnswerB.getText().toString(),
-                    edtNewAnswerC.getText().toString(),
-                    edtNewAnswerD.getText().toString());
+                    edtNewQuizName.getText().toString());
                 quizzes.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.child(quiz.getQuizName()).exists()){
+                        if (dataSnapshot.child(quiz.getQuizName()).exists()) {
                             Toast.makeText(LoggedInHomeActivity.this, "Quiz name is taken", Toast.LENGTH_SHORT).show();
-                        }
-                        else{
+                        } else {
+                            quizCreated = true;
                             quizzes.child(quiz.getQuizName()).setValue(quiz);
                             Toast.makeText(LoggedInHomeActivity.this, "Quiz creation successful", Toast.LENGTH_SHORT).show();
                         }
+                        if (quizCreated = true){
+                            AlertDialog.Builder alertdialog2 = new AlertDialog.Builder(LoggedInHomeActivity.this);
+                            alertdialog2.setTitle("Add Question");
+                            alertdialog2.setMessage("Please provide the necessary information");
+
+                            Context context = null;
+                            LayoutInflater inflater2 = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE); //this.getLayourInflater();
+                            View add_question_layout = inflater2.inflate(R.layout.add_question_layout, null);
+                            alertdialog2.setView(add_question_layout);
+                            alertdialog2.setIcon(R.drawable.ic_question_answer_black_24dp);
+
+                            edtNewQuestion = add_question_layout.findViewById(R.id.edtNewQuestion);
+                            edtNewAnswerA = add_question_layout.findViewById(R.id.edtNewAnswerA);
+                            edtNewAnswerB = add_question_layout.findViewById(R.id.edtNewAnswerB);
+                            edtNewAnswerC = add_question_layout.findViewById(R.id.edtNewAnswerC);
+                            edtNewAnswerD = add_question_layout.findViewById(R.id.edtNewAnswerD);
+
+                            alertdialog2.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialogInterface.dismiss();
+                                }
+                            });
+                            alertdialog2.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int i) {
+                                    final Question question = new Question(
+                                            edtNewQuestion.getText().toString(),
+                                            edtNewAnswerA.getText().toString(),
+                                            edtNewAnswerB.getText().toString(),
+                                            edtNewAnswerC.getText().toString(),
+                                            edtNewAnswerD.getText().toString());
+                                    questions = database.getReference(quiz.getQuizName());
+                                    questions.addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                            if(dataSnapshot.child(question.getQuestion()).exists()){
+                                               Toast.makeText(LoggedInHomeActivity.this, "testing",Toast.LENGTH_SHORT).show();
+                                            }
+                                            else{
+                                                questions.child(question.getQuestion()).setValue(edtNewQuestion);
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(DatabaseError databaseError) {
+
+                                        }
+                                    });
+                                    dialogInterface.dismiss();
+
+
+                                }
+                            });
+                        }
                     }
+
+                    //private LayoutInflater getLayourInflater() {
+                    //    return LayoutInflater;
+                    //}
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
