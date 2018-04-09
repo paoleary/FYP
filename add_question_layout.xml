@@ -123,6 +123,15 @@
                 app:met_floatingLabel="highlight"
                 app:met_primaryColor="@color/colorPrimary"
                 app:met_singleLineEllipsis="true" />
+
+            <Spinner
+                android:id="@+id/CorrectDropdown"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:tooltipText="please indicate which answer is correct"
+                android:spinnerMode="dropdown" />
+            <!--https://stackoverflow.com/questions/13377361/how-to-create-a-drop-down-list-->
+
         </LinearLayout>
     </ScrollView>
 </android.support.v7.widget.CardView>

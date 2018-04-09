@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.preference.DialogPreference;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,7 +13,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.pa.project2.model.Question;
@@ -35,7 +38,8 @@ public class LoggedInHomeActivity extends AppCompatActivity {
     //firebase stuff
     FirebaseDatabase database;
     DatabaseReference quizzes;
-    DatabaseReference questions;
+    DatabaseReference quizQuestions;
+    DatabaseReference questionAndAnswers;
 
     //for creating new quiz
     MaterialEditText edtNewQuizName;
@@ -44,7 +48,11 @@ public class LoggedInHomeActivity extends AppCompatActivity {
     MaterialEditText edtNewAnswerB;
     MaterialEditText edtNewAnswerC;
     MaterialEditText edtNewAnswerD;
-    Boolean quizCreated;
+    Boolean quizCreated = false;
+    int quizCreatedInt = 0;
+
+    Spinner CorrectDropdown;
+    String correctAnswer;
 
 
     //for taking a quiz
@@ -58,7 +66,7 @@ public class LoggedInHomeActivity extends AppCompatActivity {
         //Firebase stuff
         database = FirebaseDatabase.getInstance();
         quizzes = database.getReference("Quizzes");
-        questions = database.getReference(edtQuizName.toString());
+
 
         btnAddQuiz = (Button)findViewById(R.id.btnAddQuiz);
         btnTakeQuiz = (Button) findViewById(R.id.btnTakeQuiz);
@@ -75,7 +83,12 @@ public class LoggedInHomeActivity extends AppCompatActivity {
         btnAddQuiz.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                displayAddQuizDialogue(); //CREATE METHOD
+                if(!quizCreated){
+                    displayAddQuizDialogue();
+                }
+                if(quizCreatedInt == 1){
+                    displayAddQuestionDialogue();;
+                }
             }
         });
     }
@@ -106,7 +119,7 @@ public class LoggedInHomeActivity extends AppCompatActivity {
         alertdialog.setMessage("Please provide the necessary information");
 
         final LayoutInflater inflater = this.getLayoutInflater();
-        View add_quiz_layout = inflater.inflate(R.layout.add_quiz_layout,null);
+        final View add_quiz_layout = inflater.inflate(R.layout.add_quiz_layout,null);
         alertdialog.setView(add_quiz_layout);
         alertdialog.setIcon(R.drawable.ic_question_answer_black_24dp);
 
@@ -117,13 +130,12 @@ public class LoggedInHomeActivity extends AppCompatActivity {
         edtNewAnswerC = add_quiz_layout.findViewById(R.id.edtNewAnswerC);
         edtNewAnswerD = add_quiz_layout.findViewById(R.id.edtNewAnswerD); */
 
-        alertdialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
+        alertdialog.setNegativeButton("Cancel", new AlertDialog.OnClickListener(){
+            public void onClick(DialogInterface dialogInterface, int which) {
                 dialogInterface.dismiss();
             }
         });
-        alertdialog.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
+        alertdialog.setPositiveButton("Submit", new AlertDialog.OnClickListener() {
             @Override
             public void onClick(final DialogInterface dialogInterface, int i) {
                 final Quiz quiz = new Quiz(
@@ -135,16 +147,22 @@ public class LoggedInHomeActivity extends AppCompatActivity {
                             Toast.makeText(LoggedInHomeActivity.this, "Quiz name is taken", Toast.LENGTH_SHORT).show();
                         } else {
                             quizCreated = true;
+                            quizCreatedInt = 1;
                             quizzes.child(quiz.getQuizName()).setValue(quiz);
+                            displayAddQuestionDialogue();
                             Toast.makeText(LoggedInHomeActivity.this, "Quiz creation successful", Toast.LENGTH_SHORT).show();
+                            quizCreated = false;
+                            quizCreatedInt = 0;
+
+
                         }
-                        if (quizCreated = true){
+                        /*if (quizCreated = true){
                             AlertDialog.Builder alertdialog2 = new AlertDialog.Builder(LoggedInHomeActivity.this);
                             alertdialog2.setTitle("Add Question");
                             alertdialog2.setMessage("Please provide the necessary information");
 
-                            Context context = null;
-                            LayoutInflater inflater2 = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE); //this.getLayourInflater();
+                            Context context = null; //FIX THIS NOOOOOOOOOOOOOOOOOOOOOOOOOOOWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+                            LayoutInflater inflater2 = LayoutInflater.from(LoggedInHomeActivity.this);//(LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE); //this.getLayourInflater();
                             View add_question_layout = inflater2.inflate(R.layout.add_question_layout, null);
                             alertdialog2.setView(add_question_layout);
                             alertdialog2.setIcon(R.drawable.ic_question_answer_black_24dp);
@@ -170,7 +188,7 @@ public class LoggedInHomeActivity extends AppCompatActivity {
                                             edtNewAnswerB.getText().toString(),
                                             edtNewAnswerC.getText().toString(),
                                             edtNewAnswerD.getText().toString());
-                                    questions = database.getReference(quiz.getQuizName());
+                                    questions = database.getReference(edtQuizName.getText().toString());
                                     questions.addListenerForSingleValueEvent(new ValueEventListener() {
                                         @Override
                                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -192,7 +210,7 @@ public class LoggedInHomeActivity extends AppCompatActivity {
 
                                 }
                             });
-                        }
+                        }*/
                     }
 
                     //private LayoutInflater getLayourInflater() {
@@ -205,12 +223,80 @@ public class LoggedInHomeActivity extends AppCompatActivity {
                     }
                 });
                 dialogInterface.dismiss();
+
             }
+
+
         });
 
         alertdialog.show();
 
     }
 
+    private void displayAddQuestionDialogue() {
+        AlertDialog.Builder alertdialog2 = new AlertDialog.Builder(LoggedInHomeActivity.this);
+        alertdialog2.setTitle("Add Question");
+        alertdialog2.setMessage("Please provide the necessary information");
+
+        final LayoutInflater inflater2 = LayoutInflater.from(LoggedInHomeActivity.this);
+        final View add_question_layout = inflater2.inflate(R.layout.add_question_layout,null);
+        alertdialog2.setView(add_question_layout);
+        alertdialog2.setIcon(R.drawable.ic_question_answer_black_24dp);
+
+
+        edtNewQuestion = add_question_layout.findViewById(R.id.edtNewQuestion);
+        edtNewAnswerA = add_question_layout.findViewById(R.id.edtNewAnswerA);
+        edtNewAnswerB = add_question_layout.findViewById(R.id.edtNewAnswerB);
+        edtNewAnswerC = add_question_layout.findViewById(R.id.edtNewAnswerC);
+        edtNewAnswerD = add_question_layout.findViewById(R.id.edtNewAnswerD);
+
+        //https://stackoverflow.com/questions/13377361/how-to-create-a-drop-down-list
+        CorrectDropdown = add_question_layout.findViewById(R.id.CorrectDropdown);
+        String[] items = new String[]{"A","B","C","D"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
+        CorrectDropdown.setAdapter(adapter);
+
+
+
+        alertdialog2.setNegativeButton("Cancel", new AlertDialog.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        alertdialog2.setPositiveButton("Submit", new AlertDialog.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int i) {
+                final Question question = new Question(
+                    edtNewQuestion.getText().toString(),
+                    edtNewAnswerA.getText().toString(),
+                    edtNewAnswerB.getText().toString(),
+                    edtNewAnswerC.getText().toString(),
+                    edtNewAnswerD.getText().toString(),
+                    correctAnswer = "Answer" + CorrectDropdown.getSelectedItem().toString()); //https://stackoverflow.com/questions/10331854/how-to-get-spinner-selected-item-value-to-string
+                quizQuestions = database.getReference(edtNewQuizName.getText().toString());
+                quizQuestions.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.child(question.getQuestion()).exists()){
+                            Toast.makeText(LoggedInHomeActivity.this, "Question already exists", Toast.LENGTH_SHORT).show();
+                            displayAddQuestionDialogue();
+                        }
+                        else{
+                            quizQuestions.child(question.getQuestion()).setValue(question);
+
+                            displayAddQuestionDialogue();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+            }
+        });
+        alertdialog2.show();
+    }
 
 }
